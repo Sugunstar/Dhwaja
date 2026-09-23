@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "author": "Team larpers",
+  "editor": {
+    "width": 1000,
+    "height": 800
+  },
+  "parts": [
+    { "type": "wokwi-stm32f103c8", "id": "stm32", "top": 50, "left": 0 },
+    { "type": "wokwi-mpu6050", "id": "imu", "top": 50, "left": 250 },
+    { "type": "wokwi-ssd1306", "id": "oled", "top": 50, "left": 500 },
+    { "type": "wokwi-servo", "id": "servo", "top": 300, "left": 0 },
+    { "type": "wokwi-potentiometer", "id": "pot", "top": 300, "left": 250 },
+    { "type": "wokwi-pushbutton", "id": "btn", "top": 300, "left": 500 },
+    { "type": "wokwi-led", "id": "led", "top": 550, "left": 0 },
+    { "type": "wokwi-buzzer", "id": "buz", "top": 550, "left": 250 }
+  ],
+  "connections": [
+    [ "stm32:PB6", "imu:SCL", "" ],
+    [ "stm32:PB7", "imu:SDA", "" ],
+    [ "stm32:PB6", "oled:SCL", "" ],
+    [ "stm32:PB7", "oled:SDA", "" ],
+    [ "stm32:PA1", "servo:SIG", "" ],
+    [ "stm32:PA0", "pot:SIG", "" ],
+    [ "stm32:PA2", "btn:SIG", "" ],
+    [ "stm32:PA3", "led:ANODE", "" ],
+    [ "stm32:PA4", "buzzer:SIG", "" ],
+    [ "stm32:GND", "imu:GND", "" ],
+    [ "stm32:GND", "oled:GND", "" ],
+    [ "stm32:GND", "servo:GND", "" ],
+    [ "stm32:GND", "pot:GND", "" ],
+    [ "stm32:GND", "btn:GND", "" ],
+    [ "stm32:GND", "led:CATHODE", "" ],
+    [ "stm32:GND", "buzzer:GND", "" ]
+  ]
+}

@@ -7,9 +7,10 @@ from .config import Config
 from .simulation import simulate_until_impact
 import pandas as pd
 
-def run_monte_carlo(config=None, wind_on=True):
+def run_monte_carlo(config=None, wind_on=True, guided=False, Kp=0.05, guidance_start_ratio=0.5):
     """
     Run multiple simulations with random sampling of uncertain parameters.
+    If guided=True, apply a simple proportional mid-course correction in the crossrange (y) direction.
     Returns DataFrame with impact positions and other metrics.
     """
     if config is None:
@@ -18,7 +19,27 @@ def run_monte_carlo(config=None, wind_on=True):
     np.random.seed(42)  # for reproducibility
     N = config.mc_n
     impacts = []
+
+    # Precompute nominal impact point and time of flight for guidance (if guided)
+    nominal_impact_pos = None
+    nominal_t_impact = None
+    if guided:
+        # Nominal simulation: no uncertainties, no wind (to get reference trajectory)
+        nominal_config = Config()
+        nominal_config.wind = np.array([0.0, 0.0, 0.0])  # no wind for nominal
+        # Define guidance function will be set after we compute nominal impact
+        # We need nominal impact point and time of flight to set guidance start time
+        t_nom, states_nom, impact_nom = simulate_until_impact(config=nominal_config, wind_on=False)
+        if impact_nom is not None:
+            nominal_impact_pos = impact_nom['position']  # [x, y, z]
+            nominal_t_impact = impact_nom['t']
+        else:
+            # If no impact (should not happen), fallback to t_max
+            nominal_impact_pos = np.array([0.0, 0.0, 0.0])
+            nominal_t_impact = nominal_config.t_max
+
     for i in range(N):
+        print(f'MC run {i+1}/{N}', flush=True)
         # Create a copy of config with perturbed parameters
         # We'll create a local dict of values
         mass = config.mass + np.random.normal(0, config.mc_uncertainty['mass'])
@@ -66,7 +87,32 @@ def run_monte_carlo(config=None, wind_on=True):
         cfg_module.Config.azimuth = azi
         cfg_module.Config.wind = wind_vec
 
-        _, _, impact_data = simulate_until_impact(wind_on=wind_on)
+        # Define guidance function if guided
+        guidance_accel = None
+        if guided:
+            # Guidance: proportional correction in y direction (crossrange) after guidance start time
+            # Target line: y=0 (downrange along x-axis)
+            # We'll compute error in y relative to target line (y=0)
+            # Apply acceleration in y: a_y = -Kp * y
+            # Only apply after guidance start time
+            guidance_start_time = nominal_t_impact * guidance_start_ratio if nominal_t_impact is not None else 0.0
+            def guidance_accel_func(t, state):
+                # state is the full state vector [x,y,z,vx,vy,vz,phi,p]
+                y = state[1]  # crossrange position
+                t_guidance = guidance_start_time
+                if t < t_guidance:
+                    return np.array([0.0, 0.0, 0.0])
+                else:
+                    # Proportional correction
+                    a_y = -Kp * y
+                    # Limit acceleration to avoid unrealistic values (optional)
+                    max_a = 20.0  # m/s^2, arbitrary limit
+                    if abs(a_y) > max_a:
+                        a_y = np.sign(a_y) * max_a
+                    return np.array([0.0, a_y, 0.0])
+            guidance_accel = guidance_accel_func
+
+        _, _, impact_data = simulate_until_impact(wind_on=wind_on, guidance_accel=guidance_accel)
         # Restore
         cfg_module.Config.mass = original['mass']
         cfg_module.Config.cd = original['cd']

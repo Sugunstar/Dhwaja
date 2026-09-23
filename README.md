@@ -29,6 +29,8 @@ The software is written in Python for ease of simulation and demonstration. For 
 ### Required Python Packages
 - `numpy` (for numerical computations)
 - `matplotlib` (for visualization and plotting)
+- `scipy` (for numerical integration)
+- `pandas` (for data handling)
 
 ## Installation
 Follow these steps to set up the environment:
@@ -41,7 +43,7 @@ Follow these steps to set up the environment:
 
 2. **Install Python dependencies**:
    ```bash
-   pip install numpy matplotlib
+   pip install numpy matplotlib scipy pandas
    ```
    > **Note**: If you are using a virtual environment, activate it first.
 
@@ -58,7 +60,15 @@ dhwaja_pgk/
 │   ├── kalman_filter.py   # Kalman filter implementation
 │   ├── visualization.py   # Real-time plotting utilities
 │   ├── main.py            # Full-featured demo simulation
-│   └── demo_main.py       # Short-duration demo (auto-exits)
+│   ├── demo_main.py       # Short-duration demo (auto-exits)
+│   └── projectile_sim/    # Projectile simulation subsystem
+│       ├── __init__.py
+│   ├── config.py          # Configuration parameters
+│   ├── dynamics.py        # Equations of motion
+│   ├── simulation.py      # Numerical integration
+│   ├── plotting.py        # Plotting functions
+│   ├── monte_carlo.py     # Monte Carlo analysis
+│   └── atmosphere.py, aerodynamics.py, wind.py  # Environment models
 ├── tests/                 # Unit tests
 │   ├── test_sensor_sim.py # Tests for sensor simulation
 │   ├── test_kalman_filter.py # Tests for Kalman filter
